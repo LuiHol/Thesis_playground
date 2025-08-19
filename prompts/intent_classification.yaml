@@ -1,0 +1,15 @@
+# intent_classification.yaml (minimal)
+
+valid_intents:
+  - get_stats          # generic stat lookup
+  - get_player_info    # player identity/bio
+  - get_roster         # team roster/lineup
+  - get_result         # final score / match result
+  - compare            # compare players/teams
+  - top_stat_in_game   # "who scored the most tries?"
+  - get_grades         # "who was best/worst tackler in game"
+
+performance:
+  enable_caching: true
+  max_cache_size: 256
+  log_performance: false
