@@ -1,0 +1,54 @@
+event_mappings:
+  tackle:
+    - tackles
+    - tackling
+    - tackled
+    - tackler
+  try:
+    - tries
+    - scored
+    - scoring
+    - touchdown
+  offload:
+    - offloads
+    - offloading
+    - passed
+  penalty:
+    - penalties
+    - penalized
+    - infringement
+  yellow_card:
+    - yellow card
+    - yellow cards
+    - sin bin
+    - sin binned
+  red_card:
+    - red card
+    - red cards
+    - sent off
+    - dismissed
+  conversion:
+    - conversions
+    - converted
+    - kick
+  lineout:
+    - lineouts
+    - line out
+  scrum:
+    - scrums
+    - scrummaging
+  possession: []
+  turnover:
+    - turnovers
+    - turned over
+    - turn over
+  territory: []
+  meters:
+    - meter
+    - metre
+    - meters
+    - metres
+
+
+
+#event_mappings.yaml
