@@ -1,0 +1,178 @@
+from typing import Dict, Any, Optional
+from dataclasses import dataclass
+import logging
+
+from src.module1.components.NER_spacy import SpacyEntityExtractor
+from src.module1.components.intent_classifier_llm import IntentClassifierLLM
+from src.module1.components.simple_data_handler import SimpleRugbyDataHandler
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class Module1Output:
+    """Minimal output structure for answering user queries."""
+    data: Dict[str, Any]
+    success: bool
+    error: Optional[str] = None
+
+
+class Module1Orchestrator:
+    def __init__(self, model: Optional[str] = None, verbose: bool = False):
+        self.model = model
+        self.verbose = verbose
+
+        try:
+            self.data_handler = SimpleRugbyDataHandler()
+            self.entity_extractor = SpacyEntityExtractor()
+            self.intent_classifier = IntentClassifierLLM(model_name=model)
+            logger.info("Module 1 initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize Module 1: {e}")
+            raise
+
+    def process_query(self, query: str) -> Module1Output:
+        if self.verbose:
+            print(f"\n=== MODULE 1 PROCESSING ===")
+            print(f"Query: {query}")
+
+        try:
+            # Step 1: Entity Extraction
+            if self.verbose:
+                print("\n1. Extracting entities...")
+            entities = self.entity_extractor.extract(query, verbose=self.verbose)
+            if self.verbose:
+                print(f"   Entities: {entities}")
+
+            # Step 2: Intent Classification
+            if self.verbose:
+                print("\n2. Classifying intent...")
+            intent = self.intent_classifier.classify(query, model=self.model, verbose=self.verbose)
+            if self.verbose:
+                print(f"   Intent: {intent}")
+
+            # Step 3: Data Retrieval
+            if self.verbose:
+                print("\n3. Retrieving data...")
+            
+            # Use data handler directly (no conversion needed)
+            result = self.data_handler.get_data_for_query(entities, intent)
+            
+            # Convert QueryResult to expected format
+            data = {
+                "intent": intent,
+                "data": result.data,
+                "success": result.success,
+                "error": result.error,
+                "metadata": result.metadata
+            }
+
+            if self.verbose:
+                print(f"   Data retrieved: {intent} query with {len(result.data)} results")
+
+            if self.verbose:
+                print("\n✓ Module 1 processing completed successfully")
+
+            return Module1Output(data=data, success=result.success, error=result.error)
+
+        except Exception as e:
+            logger.error(f"Module 1 processing failed: {e}")
+            return Module1Output(data={"data": []}, success=False, error=str(e))
+
+    def close(self):
+        """Clean up resources."""
+        if hasattr(self, 'data_handler'):
+            self.data_handler.close()
+
+    def get_component_status(self) -> Dict[str, bool]:
+        return {
+            "entity_extractor": self.entity_extractor is not None,
+            "intent_classifier": self.intent_classifier is not None,
+            "data_handler": self.data_handler is not None
+        }
+
+    def test_pipeline(self) -> Dict[str, Any]:
+        test_queries = [
+            "How many tackles did player 15 make?",
+            "Who is player 7?",
+            "Compare player 15 with player 12",
+            "Which team scored the most tries?",
+            "Show me Lyon's roster"
+        ]
+        results = {}
+        print("=== MODULE 1 PIPELINE TEST ===")
+
+        for i, query in enumerate(test_queries, 1):
+            print(f"\nTest {i}: {query}")
+            result = self.process_query(query)
+            results[f"test_{i}"] = {
+                "query": query,
+                "success": result.success,
+                "data_count": len(result.data.get("data", [])),
+                "error": result.error
+            }
+            if result.success:
+                print(f"   ✓ Success: {len(result.data.get('data', []))} results")
+            else:
+                print(f"   ✗ Failed: {result.error}")
+
+        return results
+
+
+def process_rugby_query(query: str, model: Optional[str] = None, verbose: bool = False) -> Module1Output:
+    orchestrator = Module1Orchestrator(model=model, verbose=verbose)
+    return orchestrator.process_query(query)
+
+
+def create_module1_orchestrator(model: Optional[str] = None, verbose: bool = False) -> Module1Orchestrator:
+    return Module1Orchestrator(model=model, verbose=verbose)
+
+
+def should_route_to_module2(route: str, output: Module1Output | None = None) -> bool:
+    """
+    Primary routing is decided by the routing_classifier (route: 'simple' | 'complex').
+    This function exists only as a thin wrapper for convenience and (optionally) to add minimal
+    fallback behavior if desired.
+    """
+    if route == "complex":
+        return True
+    if route == "simple":
+        return False
+
+    # Fallback (route unknown): only route if Module 1 failed or returned no data
+    if not output or not output.success:
+        return True
+    data_list = output.data.get("data", []) if isinstance(output.data, dict) else []
+    return not data_list
+
+
+
+if __name__ == "__main__":
+    try:
+        orchestrator = Module1Orchestrator(verbose=True)
+
+        print("=== SINGLE QUERY TEST ===")
+        test_query = "How many tackles did player 15 from Lyon make?"
+        result = orchestrator.process_query(test_query)
+
+        print(f"\nFinal Result:")
+        if result.success:
+            for entry in result.data.get("data", []):
+                print(entry)
+        else:
+            print(f"Error: {result.error}")
+
+        print(f"Route to Module 2: {should_route_to_module2(result)}")
+
+        print("\n" + "=" * 50)
+        test_results = orchestrator.test_pipeline()
+        successful = sum(1 for r in test_results.values() if r["success"])
+        total = len(test_results)
+        print(f"\n=== TEST SUMMARY ===\nTests passed: {successful}/{total}")
+        print(f"Component status: {orchestrator.get_component_status()}")
+        print(f"\n✓ Module 1 is ready for integration!")
+
+    except Exception as e:
+        logger.error(f"Module 1 test failed: {e}")
+        raise
