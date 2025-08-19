@@ -1,0 +1,97 @@
+# jersey_mappings.yaml
+# Maps rugby positions to their typical jersey numbers
+
+positions:
+  loosehead_prop: 1
+  hooker: 2
+  tighthead_prop: 3
+  lock:
+    - 4
+    - 5
+  blindside_flanker: 6
+  openside_flanker: 7
+  number_8: 8
+  scrum_half: 9
+  fly_half: 10
+  left_wing: 11
+  inside_centre: 12
+  outside_centre: 13
+  right_wing: 14
+  fullback: 15
+
+groups:
+  prop:
+    - 1
+    - 3
+  flanker:
+    - 6
+    - 7
+  wing:
+    - 11
+    - 14
+  centre:
+    - 12
+    - 13
+  second_row:
+    - 4
+    - 5
+
+aliases:
+  # Normalized aliases for position names
+  prop:
+    - prop
+    - props
+    - loosehead
+    - tighthead
+  hooker:
+    - hooker
+    - hookers
+  lock:
+    - lock
+    - locks
+    - second row
+  flanker:
+    - flanker
+    - flankers
+    - blindside
+    - openside
+  number_8:
+    - number 8
+    - no 8
+    - eighth man
+  scrum_half:
+    - scrum half
+    - scrum-half
+    - halfback
+  fly_half:
+    - fly half
+    - fly-half
+    - standoff
+    - out half
+    - kicker
+    - ten
+  inside_centre:
+    - inside centre
+    - inside center
+    - centre
+    - center
+  outside_centre:
+    - outside centre
+    - outside center
+    - centre
+    - center
+  wing:
+    - wing
+    - winger
+    - wings
+  fullback:
+    - full back
+    - fullback
+    - fb
+
+
+# Regex patterns for entity detection
+patterns:
+  jersey_number: '\bplayer\s+(\d{1,2})\b'
+  round: '\bround\s+(\d{1,2})\b'
+  match: '\b(?:match|game)\s+(\d{1,3})\b'
